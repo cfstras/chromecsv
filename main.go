@@ -6,7 +6,9 @@ package main
 #include <windows.h>
 #include <Wincrypt.h>
 
-byte* decrypt(byte* in, int len) {
+char* retval;
+
+char* decrypt(byte* in, int len, int *outLen) {
 	DATA_BLOB input, output;
 	LPWSTR pDescrOut =  NULL;
 	input.cbData = len;
@@ -21,7 +23,13 @@ byte* decrypt(byte* in, int len) {
 							  // used.
 		0,
 		&output);
-	puts(output.pbData);
+	*outLen = output.cbData;
+	return output.pbData;
+	//puts(output.pbData);
+}
+
+void doFree(char* ptr) {
+	free(ptr);
 }
 
 */
@@ -87,20 +95,18 @@ func main() {
 	}
 	fmt.Println()
 
-	for i := 0; i < 24; i++ {
-		rows.Next() //skip some
-	}
-
 	for rows.Next() {
 		var url, username, pwType string
 		var password []byte
 		var timesUsed int
 		rows.Scan(&url, &username, &password, &timesUsed, &pwType)
+		var pwLen C.int
+		pwDecC := C.decrypt((*C.byte)(&password[0]), C.int(len(password)), &pwLen)
+		passwordString := C.GoStringN(pwDecC, pwLen)
+		//C.doFree(pwDecC)
 
-		C.decrypt((*C.byte)(&password[0]), C.int(len(password)))
-		fmt.Printf("url: %s, user: %s, pw: %s, times used: %d, type: %s\n",
-			url, username, "FIXME", timesUsed, pwType)
-
+		fmt.Printf("url: %s, user: %s, pw: %s, pwlen:%d, times used: %d, type: %s\n",
+			url, username, passwordString, pwLen, timesUsed, pwType)
 		exit(0)
 	}
 
