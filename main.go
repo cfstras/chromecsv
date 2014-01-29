@@ -1,46 +1,12 @@
 package main
 
-/*
-#cgo LDFLAGS: -lCrypt32
-#define WINDOWS_LEAN_AND_MEAN
-#include <windows.h>
-#include <Wincrypt.h>
-
-char* retval;
-
-char* decrypt(byte* in, int len, int *outLen) {
-	DATA_BLOB input, output;
-	LPWSTR pDescrOut =  NULL;
-	input.cbData = len;
-	input.pbData = in;
-	CryptUnprotectData(
-		&input,
-		&pDescrOut,
-		NULL,                 // Optional entropy
-		NULL,                 // Reserved
-		NULL,                 // Here, the optional
-							  // prompt structure is not
-							  // used.
-		0,
-		&output);
-	*outLen = output.cbData;
-	return output.pbData;
-	//puts(output.pbData);
-}
-
-void doFree(char* ptr) {
-	free(ptr);
-}
-
-*/
-import "C"
-
 import (
 	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"path"
+	"strings"
 )
 
 type Status int
@@ -50,13 +16,20 @@ const (
 	InvalidArgs
 	FileNotFound
 	DatabaseFail
+	OutputWrite
 )
 
 const (
-	relativePath = "User Data/Default/Login Data"
+	relativePath = "Default/Login Data"
 	pwdQuery     = `select
-	origin_url, username_value, password_value, times_used, password_type
+	origin_url, username_value, password_value
 	from logins`
+	outHeader = "uri,service,user,pass,tags\n"
+)
+
+var (
+	outputFile = "passwords.csv"
+	outTags    = "chrome-export"
 )
 
 var db *sql.DB
@@ -65,8 +38,8 @@ func main() {
 	args := os.Args
 	if len(args) != 2 {
 		p(`Please provide your Chrome configuration folder as argument!`)
-		p(`On Windows, this is usually %LOCALAPPDATA%\Google\Chrome`)
-		p(`On Linux, this is usually ~/.config/Google/Chrome`)
+		p(`On Windows, this is usually "%LOCALAPPDATA%\Google\Chrome\User Data"`)
+		p(`On Linux, this is usually ~/.config/google-chrome`)
 		exit(InvalidArgs)
 	}
 	base := args[1]
@@ -77,7 +50,7 @@ func main() {
 		exit(FileNotFound)
 	}
 
-	fmt.Println("Loading database...")
+	p("Loading database...")
 	db, err := sql.Open("sqlite3", path)
 	rows, err := db.Query(pwdQuery)
 	if err != nil {
@@ -89,28 +62,40 @@ func main() {
 		p(err.Error())
 		exit(DatabaseFail)
 	}
-	fmt.Printf("Columns: ")
+	fmt.Fprint(os.Stderr, "Columns found: ")
 	for _, col := range cols {
 		fmt.Printf("%s, ", col)
 	}
-	fmt.Println()
+	p("")
 
-	for rows.Next() {
-		var url, username, pwType string
-		var password []byte
-		var timesUsed int
-		rows.Scan(&url, &username, &password, &timesUsed, &pwType)
-		var pwLen C.int
-		pwDecC := C.decrypt((*C.byte)(&password[0]), C.int(len(password)), &pwLen)
-		passwordString := C.GoStringN(pwDecC, pwLen)
-		//C.doFree(pwDecC)
+	crypt := NewCrypt()
 
-		fmt.Printf("url: %s, user: %s, pw: %s, pwlen:%d, times used: %d, type: %s\n",
-			url, username, passwordString, pwLen, timesUsed, pwType)
-		exit(0)
+	out, err := os.Create(outputFile)
+	if err != nil {
+		p("Could not open output file " + outputFile + ": " + err.Error())
+		exit(OutputWrite)
 	}
+	defer out.Close()
+	fmt.Fprint(out, outHeader)
 
-	fmt.Println("Exporting stuff...")
+	p("Exporting stuff...")
+	for rows.Next() {
+		var url, username string
+		var pwCrypt []byte
+		rows.Scan(&url, &username, &pwCrypt)
+		password := crypt.decrypt(pwCrypt)
+		escapeCSV(&url)
+		escapeCSV(&username)
+		escapeCSV(&password)
+		escapeCSV(&outTags)
+		fmt.Fprintf(out, `"%s",,"%s","%s","%s"`+"\n", url, username, password, outTags)
+	}
+	p("Diddly-done! Your stuff is now in " + outputFile + ` --
+- be careful when opening it, make sure nobody is standing behind you!`)
+}
+
+func escapeCSV(s *string) {
+	*s = strings.Replace(*s, `"`, `""`, -1)
 }
 
 func p(s string) {
