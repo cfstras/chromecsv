@@ -2,7 +2,6 @@ package main
 
 /*
 #cgo LDFLAGS: -lCrypt32
-#define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
 #include <Wincrypt.h>
@@ -29,7 +28,6 @@ char* decrypt(byte* in, int len, int *outLen) {
 void doFree(char* ptr) {
 	free(ptr);
 }
-
 */
 import "C"
 
@@ -37,12 +35,12 @@ type WindowsCrypt struct {
 }
 
 func NewCrypt() crypt {
-	return &DarwinCrypt{}
+	return &WindowsCrypt{}
 }
 
 func (c *WindowsCrypt) decrypt(input []byte) string {
-	var pwLen C.int
-	pwDecC := C.decrypt((*C.byte)(&password[0]), C.int(len(password)), &pwLen)
-	passwordString := C.GoStringN(pwDecC, pwLen)
-	return passwordString
+	var length C.int
+	decruptedC := C.decrypt((*C.byte)(&input[0]), C.int(len(input)), &length)
+	decrypted := C.GoStringN(decruptedC, length)
+	return decrypted
 }
