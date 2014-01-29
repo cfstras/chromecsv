@@ -20,12 +20,13 @@ No need to Compile or Install! Simply grab the latest release from here:
 [Downloads & Releases][releases]
 
 Now, open a console where you downloaded it and type the following:
+
 ```bash
 # on linux
 chromecsv ~/.config/google-chrome/
 ```
 
-```cmd
+```bat
 :: on windows
 chromecsv "%LOCALAPPDATA%\Google\Chrome\User Data"
 ```
@@ -39,11 +40,13 @@ Compiling from Source
 You'll need a working [Go][golang] environment and libsqlite3-dev.
 
 On Ubuntu, for example, you can get that up and running like this:
+
 ```bash
 sudo apt-get install libsqlite3-dev golang
 ```
 
 Now for the fun part:
+
 ```bash
 go get github.com/mattn/go-sqlite3 # get sqlite3-bindings for golang
 go get github.com/cfstras/chromecsv # get and install chromecsv
@@ -70,4 +73,6 @@ On Linux, per Default, no encryption/decryption is done, so no decryption is nec
 License
 ------- 
 
-This software is released under the MIT license. For details, see `LICENSE.md`
+This software is released under the MIT license. For details, see [LICENSE.md][license]
+
+[license]: https://github.com/cfstras/chromecsv/blob/master/LICENSE.md
