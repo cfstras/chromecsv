@@ -19,7 +19,7 @@ Usage
 No need to Compile or Install! Simply grab the latest release from here:
 [Downloads & Releases][releases]
 
-Now, open a console where you downloaded it and type the following:
+First, close all Chrome windows. Yes, all of them. Even this one. Then, open a console where you downloaded it and type the following, then hit <kbd>Enter</kbd>.
 
 ```bash
 # on linux
@@ -30,6 +30,8 @@ chromecsv ~/.config/google-chrome/
 :: on windows
 chromecsv "%LOCALAPPDATA%\Google\Chrome\User Data"
 ```
+If you don't want to memorize the path, you can open the console and type the command, then close Chrome and _then_ press <kbd>Enter</kbd>.
+
 Now, you should have a new file named `passwords.csv`. Open it (when noone is around :smile:) and cheer in happiness!
 
 [releases]: https://github.com/cfstras/chromecsv/releases
