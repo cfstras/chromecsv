@@ -1,10 +1,6 @@
 ChromeCSV [![Build Status](https://travis-ci.org/cfstras/chromecsv.svg?branch=master)](https://travis-ci.org/cfstras/chromecsv)
 =========
 
-### Note: This tool might or might not work for you.
-This has not worked for me for some time now. Chromium changed their password storage mechanics.
-The tables are still there, but there's no data in them. I guess this has something to do with their new sync engine, haven't figured it out yet.
-
 ---
 
 ChromeCSV is a simple tool for exporting the passwords you saved in Google Chrome / Chromium to a plain text CSV file. You can then import the contents of that file into your [PassDeposit][passdep] account or do whatever you like to it!
